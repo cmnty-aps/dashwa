@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "BotConfig": {
+      "title": "Bot Configuration",
+      "description": "Configuration for the bot",
+      "type": "object",
+      "properties": {
+        "owner": { "type": "array" },
+        "botName": { "type": "string" },
+        "channelId": { "type": "string" },
+        "channelName": { "type": "string" },
+        "channelLink": { "type": "string" },
+        "autoFollowChannelId": { "type": "string" },
+        "autoFollowChannelId2": { "type": "string" },
+        "autoJoinGroupId": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "allowedIPs": { "type": "array" }
+      }
+    },
+    "GroupData": {
+        "title": "Group Data",
+        "description": "Data for a group",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" }
+        }
+    },
+    "UserData": {
+        "title": "User Data",
+        "description": "Data for a user",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" }
+        }
+    },
+    "SettingsData": {
+        "title": "Settings Data",
+        "description": "Bot settings",
+        "type": "object",
+        "properties": {
+            "autoRead": { "type": "boolean" },
+            "autoTyping": { "type": "boolean" }
+        }
+    }
+  },
+  "firestore": {
+    "/configs/bot": {
+      "schema": "BotConfig",
+      "description": "The main bot configuration"
+    },
+    "/groups/{jid}": {
+      "schema": "GroupData",
+      "description": "Group data collection"
+    },
+    "/users/{jid}": {
+      "schema": "UserData",
+      "description": "User data collection"
+    },
+    "/settings/bot": {
+        "schema": "SettingsData",
+        "description": "Bot settings"
+    }
+  }
+}

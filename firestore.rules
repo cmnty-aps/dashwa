@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functionality
+    function isSignedIn() { return request.auth != null; }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Bot Configuration
+    match /configs/bot {
+      allow read, write: if true;
+    }
+
+    // Groups
+    match /groups/{jid} {
+      allow read, write: if true;
+    }
+
+    // Users
+    match /users/{jid} {
+      allow read, write: if true;
+    }
+
+    // Settings
+    match /settings/bot {
+      allow read, write: if true;
+    }
+  }
+}
