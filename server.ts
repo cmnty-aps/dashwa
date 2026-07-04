@@ -566,6 +566,7 @@ interface BotInstance {
 }
 
 const instances = new Map<string, BotInstance>();
+const rateLimits = new Map<string, number[]>();
 
 function formatDuration(ms: number) {
   const seconds = Math.floor(ms / 1000);
@@ -6838,6 +6839,25 @@ async function handleMessages(deviceId: string, chat: any) {
       const args = body.slice(prefix.length).trim().split(/ +/);
       const command = args.shift()?.toLowerCase();
       const q = args.join(" ");
+
+      // Rate Limiting Logic (5 times per minute for non-owners)
+      if (!isOwner) {
+        const now = Date.now();
+        const userTimestamps = rateLimits.get(actualSender) || [];
+        const recentTimestamps = userTimestamps.filter(t => now - t < 60000);
+        
+        if (recentTimestamps.length >= 5) {
+          addSystemLog(deviceId, `User ${actualSender} rate limited on command: ${command}`, "warn");
+          const waitTimeSec = Math.ceil((60000 - (now - recentTimestamps[0])) / 1000);
+          await sock.sendMessage(chatId, {
+            text: `⚠️ *ʀᴀᴛᴇ ʟɪᴍɪᴛ*\n\n> Kamu telah mencapai limit penggunaan bot (*5×/menit*).\n> Silakan tunggu *${waitTimeSec} detik* sebelum mencoba lagi.`
+          }, { quoted: m });
+          continue;
+        }
+        
+        recentTimestamps.push(now);
+        rateLimits.set(actualSender, recentTimestamps);
+      }
 
       addSystemLog(deviceId, `User ${actualSender} executed command: ${command}`, "info");
 
