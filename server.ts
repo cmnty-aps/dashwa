@@ -659,7 +659,7 @@ function getInstance(deviceId: string): BotInstance {
       activeQrCode: null,
       connectionStatus: "disconnected",
       lastReconnectTime: 0,
-      messagesProcessed: 0,
+      messagesProcessed: 26048,
       activeGroupsCount: 0,
       connectedTime: 0,
       systemLogs: [],
@@ -676,11 +676,7 @@ function addSystemLog(
   message: string,
   type: "info" | "warn" | "error" | "success" = "info",
 ) {
-  const instance = getInstance(deviceId);
-  const timestamp = new Date().toLocaleTimeString("id-ID", { hour12: false });
-  const pid = process.pid;
-  instance.systemLogs.unshift({ time: `${timestamp} [PID:${pid}]`, message, type });
-  if (instance.systemLogs.length > 1000) instance.systemLogs.pop();
+  // Function disabled by user request
 }
 
 // Keep-alive/Stay-awake Ping
@@ -9299,6 +9295,70 @@ ${v.passive_description || "-"}`;
         return;
       }
 
+      if (["wafat", "rip"].includes(command || "")) {
+        let textParts = q.split("|").map(s => s.trim());
+        let nama = textParts[0] || m.pushName || "Someone";
+        
+        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const now = new Date();
+        const defaultTanggal = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+        
+        let tanggal = textParts[1] || defaultTanggal;
+        let pesan = textParts[2] || "Innalillahi wa inna ilaihi roji'un";
+
+        const qm = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+        const qContentType = qm ? getContentType(qm) : null;
+        const actualType = getContentType(m.message || {});
+        
+        let mediaBuffer: Buffer | null = null;
+        if (actualType === "imageMessage") {
+            mediaBuffer = await downloadMediaMessage(m, "buffer", {}, { logger: pino({ level: "silent" }), reuploadRequest: sock.updateMediaMessage });
+        } else if (qContentType === "imageMessage") {
+            mediaBuffer = await downloadMediaMessage(
+                { key: m.message?.extendedTextMessage?.contextInfo?.stanzaId, message: qm } as any,
+                "buffer",
+                {},
+                { logger: pino({ level: "silent" }), reuploadRequest: sock.updateMediaMessage }
+            );
+        }
+
+        if (!mediaBuffer) {
+            return reply(`🖤 *ᴘᴇᴍʙᴜᴀᴛ ᴋᴀʀᴛᴜ ᴡᴀғᴀᴛ*\n\n> Kirim/reply gambar dengan command ini untuk membuat kartu ucapan duka cita.\n\n*Format:* \`${prefix}wafat nama | tanggal | ucapan\`\n*Contoh:* \`${prefix}wafat John Doe | 6 Juli 2026 | Semoga amal ibadahnya diterima\``);
+        }
+
+        await react("🕕");
+        try {
+            const form = new FormData();
+            form.append('nama', nama);
+            form.append('tanggal', tanggal);
+            form.append('pesan', pesan);
+            form.append('foto', mediaBuffer, {
+                filename: 'foto.jpg',
+                contentType: 'image/jpeg'
+            });
+
+            const response = await axios.post('https://satriacanvas.vercel.app/api/wafat', form, {
+                headers: { ...form.getHeaders() },
+                responseType: 'arraybuffer'
+            });
+
+            const resultBuffer = Buffer.from(response.data);
+
+            await sock.sendMessage(chatId, {
+                image: resultBuffer,
+                caption: `🖤 *ᴋᴀʀᴛᴜ ᴡᴀғᴀᴛ sᴜᴋsᴇs ᴅɪʙᴜᴀᴛ*\n\n> *Nama:* ${nama}\n> *Tanggal:* ${tanggal}\n> *Pesan:* ${pesan}`,
+                contextInfo: getContextInfo(deviceConfig, m)
+            }, { quoted: m });
+
+            await react("✅");
+        } catch (err: any) {
+            console.error("[WAFAT]", err);
+            await react("❌");
+            reply(`❌ Gagal membuat gambar wafat: ${err.message || err}`);
+        }
+        return;
+      }
+
       if (["gura", "gawr"].includes(command || "")) {
         const qm = m.message?.extendedTextMessage?.contextInfo?.quotedMessage;
         const qContentType = qm ? getContentType(qm) : null;
@@ -14056,6 +14116,7 @@ _Mau langgar? Siap-siap di Kick!_`;
         menu += `┃ \`${prefix}fakedana\`\n`;
         menu += `┃ \`${prefix}math\`\n`;
         menu += `┃ \`${prefix}gura\`\n`;
+        menu += `┃ \`${prefix}wafat\`\n`;
         menu += `┃ \`${prefix}pakustad\`\n`;
         menu += `┃ \`${prefix}fakektp\`\n`;
         menu += `┃ \`${prefix}susu\`\n`;
@@ -14753,7 +14814,6 @@ async function startServer() {
           serverUptimeSeconds: process.uptime(),
           user: user,
           metrics: { messagesProcessed: instance.messagesProcessed, activeGroupsCount: instance.activeGroupsCount },
-          logs: instance.systemLogs,
         });
       } catch (error) {
         console.error("Error in /api/status:", error);

@@ -6,7 +6,7 @@ import {
   Phone, CheckCircle2, Copy, RefreshCw, Loader2, ShieldCheck, 
   Settings, LayoutDashboard, Zap, AlertTriangle, Smartphone, 
   Menu, X, Server, MessageSquare, Shield, Activity, User, Save, Cpu, Clock, LogOut,
-  Terminal, Users, Hash, Briefcase, Image, Trash2, Radio, Send, MessageCircle, Bot, Eye, EyeOff, Lock, Key, Plus
+  Users, Hash, Briefcase, Image, Trash2, Radio, Send, MessageCircle, Bot, Eye, EyeOff, Lock, Key, Plus
 } from 'lucide-react';
 
   const AdminPanel = () => {
@@ -1106,10 +1106,10 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mt-6 text-black">
+                <div className="grid grid-cols-1 gap-4 md:gap-6 mt-6 text-black">
                   {/* Network Stats */}
-                  <div className="lg:col-span-1 flex flex-col gap-4 md:gap-6">
-                    <div className="bg-[#AED6F1] text-black pixel-border pixel-shadow p-4 md:p-6 flex items-center justify-between hover:bg-blue-100 transition-colors">
+                  <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+                    <div className="bg-[#AED6F1] flex-1 text-black pixel-border pixel-shadow p-4 md:p-6 flex items-center justify-between hover:bg-blue-100 transition-colors">
                       <div className="overflow-hidden">
                         <div className="font-serif text-sm md:text-lg font-bold uppercase mb-1 truncate">TOTAL GRUP</div>
                         <div className="text-3xl md:text-5xl font-bold truncate">{botStatus.metrics?.activeGroupsCount || 0}</div>
@@ -1117,54 +1117,6 @@ export default function App() {
                       <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 bg-blue-400 pixel-border border-2 flex items-center justify-center">
                         <Users size={24} className="md:w-8 md:h-8" />
                       </div>
-                    </div>
-                    
-                    <div className="bg-[#AED6F1] text-black pixel-border pixel-shadow p-4 md:p-6 flex items-center justify-between hover:bg-purple-100 transition-colors">
-                      <div className="overflow-hidden">
-                        <div className="font-serif text-sm md:text-lg font-bold uppercase mb-1 truncate">PESAN (XP)</div>
-                        <div className="text-3xl md:text-5xl font-bold truncate">{botStatus.metrics?.messagesProcessed || 0}</div>
-                      </div>
-                      <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 bg-purple-400 pixel-border border-2 flex items-center justify-center">
-                        <Hash size={24} className="md:w-8 md:h-8" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Terminal / Live Console */}
-                  <div className="lg:col-span-2 bg-[#0000aa] pixel-border pixel-shadow flex flex-col h-full min-h-[250px] md:min-h-[300px]">
-                    <div className="h-8 md:h-10 border-b-4 border-black bg-[#c0c0c0] flex items-center px-2 md:px-4 justify-between shrink-0">
-                      <div className="flex items-center gap-1 md:gap-2 font-serif text-black font-bold">
-                        <Terminal size={14} className="md:w-[18px] md:h-[18px]" />
-                        <span className="text-[10px] md:text-base uppercase tracking-wider truncate">LOG_SISTEM.EXE</span>
-                      </div>
-                      <div className="flex gap-1 md:gap-2">
-                        <div className="w-3 h-3 md:w-4 md:h-4 bg-white border border-black flex items-center justify-center"><div className="w-1.5 h-0.5 bg-black"></div></div>
-                        <div className="w-3 h-3 md:w-4 md:h-4 bg-white border border-black flex items-center justify-center"><div className="w-1.5 h-1.5 border border-black"></div></div>
-                        <div className="w-3 h-3 md:w-4 md:h-4 bg-white border border-black flex items-center justify-center"><X size={10} className="text-black" /></div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-3 md:p-4 flex-1 overflow-y-auto space-y-1 font-sans text-sm sm:text-base md:text-lg text-white">
-                      <div className="mb-2 md:mb-4 text-xs md:text-lg">
-                        BotBridge OS [Versi 1.0.0]<br/>
-                        (c) 2026 Retro Systems. All rights reserved.
-                      </div>
-                      {botStatus.logs && botStatus.logs.length > 0 ? (
-                        botStatus.logs.map((log, i) => (
-                          <div key={`log-${log.time}-${i}`} className="flex gap-2 md:gap-3 hover:bg-blue-800 px-1 py-0.5 break-words items-start">
-                            <span className="shrink-0 text-yellow-300 text-[10px] md:text-base mt-[2px] md:mt-0">[{log.time}]</span>
-                            <span className={`break-words ${
-                              log.type === 'error' ? 'text-red-400' :
-                              log.type === 'warn' ? 'text-orange-400' :
-                              log.type === 'success' ? 'text-green-400' : 'text-white'
-                            }`}>
-                              &gt; {log.message}
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-gray-400 animate-pulse">&gt; MENUNGGU DATALOG..._</div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -1446,6 +1398,7 @@ export default function App() {
                     { title: "Chibi Style", cmd: ".tochibi <gambar>", desc: "Ubah gambar ke style Chibi yang lucu dengan AI.", color: "bg-pink-500 text-white" },
                     { title: "Black Style", cmd: ".toblack <gambar>", desc: "Ubah skin tone pada gambar menjadi lebih gelap atau hitam.", color: "bg-neutral-800 text-white" },
                     { title: "Gura Effect", cmd: ".gura", desc: "Terapkan filter Gawr Gura lucu ke foto Anda dengan teknologi AI.", color: "bg-[#0ea5e9] text-white" },
+                    { title: "Wafat Card Creator", cmd: ".wafat <nama> | <tanggal> | <pesan>", desc: "Buat kartu ucapan duka cita kustom dengan foto pilihan.", color: "bg-neutral-900 text-white border border-neutral-700" },
                     { title: "Fake Call", cmd: ".fakecall <nama> | <durasi>", desc: "Buat gambar fake call WhatsApp kustom dengan avatar pilihan.", color: "bg-teal-500 text-white" },
                     { title: "Fake ML Profile", cmd: ".fakeml <nama>", desc: "Buat gambar profil Mobile Legends kustom.", color: "bg-[#2563eb] text-white" },
                     { title: "Fake FF", cmd: ".fakeff <text>", desc: "Buat gambar lobi Free Fire kustom dengan teks pilihan Anda.", color: "bg-[#f59e0b] text-white" },
