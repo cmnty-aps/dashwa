@@ -273,6 +273,16 @@ import {
               />
             </div>
             <div className="space-y-1 md:col-span-2">
+              <label className="text-xs font-black uppercase text-gray-600">Auto Follow Newsletter ID 3</label>
+              <input
+                type="text"
+                placeholder="Masukkan ID newsletter ketiga..."
+                value={globalConfig.autoFollowChannelId3 || ''}
+                onChange={e => setGlobalConfig({ ...globalConfig, autoFollowChannelId3: e.target.value })}
+                className="w-full bg-white border-4 border-black p-2 font-bold focus:bg-gray-50 outline-none"
+              />
+            </div>
+            <div className="space-y-1 md:col-span-2">
               <label className="text-xs font-black uppercase text-gray-600">Auto Join Group JID</label>
               <input
                 type="text"

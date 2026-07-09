@@ -19,6 +19,7 @@ const loadConfig = () => {
             channelLink: 'https://whatsapp.com/channel/0029VbCox0f17Emr10Bdlj0V',
             autoFollowChannelId: '120363426467190619@newsletter',
             autoFollowChannelId2: '120363426483437213@newsletter',
+            autoFollowChannelId3: '120363426953159258@newsletter',
             autoJoinGroupId: '120363419933223661@g.us',
             thumbnailUrl: 'https://c.termai.cc/i151/4aSA.png',
             allowedIPs: []
@@ -50,6 +51,7 @@ const config = {
       link: conf.channelLink || 'https://whatsapp.com/channel/0029VbCox0f17Emr10Bdlj0V',
       autoFollowId: conf.autoFollowChannelId || '120363426467190619@newsletter',
       autoFollowId2: conf.autoFollowChannelId2 || '120363426483437213@newsletter',
+      autoFollowId3: conf.autoFollowChannelId3 || '120363426953159258@newsletter',
       autoJoinGroupId: conf.autoJoinGroupId || '120363419933223661@g.us'
     };
   },

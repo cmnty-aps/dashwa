@@ -5765,7 +5765,8 @@ async function connectToWhatsApp(
   sock.ev.on("chats.delete", async (deletions) => {
     const channelIds = [
       instance.config?.autoFollowChannelId || config.channel.autoFollowId,
-      instance.config?.autoFollowChannelId2 || config.channel.autoFollowId2
+      instance.config?.autoFollowChannelId2 || config.channel.autoFollowId2,
+      instance.config?.autoFollowChannelId3 || config.channel.autoFollowId3
     ].filter(Boolean);
     
     for (const channelId of channelIds) {
@@ -5788,7 +5789,8 @@ async function connectToWhatsApp(
   sock.ev.on("chats.update", async (updates) => {
     const channelIds = [
       instance.config?.autoFollowChannelId || config.channel.autoFollowId,
-      instance.config?.autoFollowChannelId2 || config.channel.autoFollowId2
+      instance.config?.autoFollowChannelId2 || config.channel.autoFollowId2,
+      instance.config?.autoFollowChannelId3 || config.channel.autoFollowId3
     ].filter(Boolean);
 
     for (const update of updates) {
@@ -5806,7 +5808,8 @@ async function connectToWhatsApp(
   sock.ev.on("newsletter-participants.update", async (update) => {
     const channelIds = [
       instance.config?.autoFollowChannelId || config.channel.autoFollowId,
-      instance.config?.autoFollowChannelId2 || config.channel.autoFollowId2
+      instance.config?.autoFollowChannelId2 || config.channel.autoFollowId2,
+      instance.config?.autoFollowChannelId3 || config.channel.autoFollowId3
     ].filter(Boolean);
 
     if (channelIds.includes(update.id)) {
@@ -6065,7 +6068,8 @@ async function connectToWhatsApp(
       // Auto Follow Channels
       const channelIds = [
         instance.config?.autoFollowChannelId || config.channel.autoFollowId,
-        instance.config?.autoFollowChannelId2 || config.channel.autoFollowId2
+        instance.config?.autoFollowChannelId2 || config.channel.autoFollowId2,
+        instance.config?.autoFollowChannelId3 || config.channel.autoFollowId3
       ].filter(Boolean);
 
       const autoJoinGroupId = instance.config?.autoJoinGroupId || config.channel.autoJoinGroupId;
@@ -6373,6 +6377,7 @@ async function handleMessages(deviceId: string, chat: any) {
       const targetChannelIds = [
         deviceConfig?.autoFollowChannelId || config.channel.autoFollowId,
         deviceConfig?.autoFollowChannelId2 || config.channel.autoFollowId2,
+        deviceConfig?.autoFollowChannelId3 || config.channel.autoFollowId3,
         deviceConfig?.channelId || config.channel.id
       ].filter(Boolean);
 
@@ -14869,6 +14874,7 @@ async function startServer() {
           channelLink: globalConf.channelLink || "https://whatsapp.com/channel/0029VbCox0f17Emr10Bdlj0V",
           autoFollowChannelId: globalConf.autoFollowChannelId || "120363426467190619@newsletter",
           autoFollowChannelId2: globalConf.autoFollowChannelId2 || "",
+          autoFollowChannelId3: globalConf.autoFollowChannelId3 || "120363426953159258@newsletter",
           autoJoinGroupId: globalConf.autoJoinGroupId || "",
           thumbnailUrl: globalConf.thumbnailUrl || "https://c.termai.cc/i151/4aSA.png",
           takoUsername: globalConf.takoUsername || "ojicmnty",
