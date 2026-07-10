@@ -15445,6 +15445,26 @@ async function startServer() {
 }
 
 // Graceful shutdown handling
+async function forceReconnectBot(deviceId: string, reason: string) {
+  console.log(`[WATCHDOG] Force reconnecting bot ${deviceId} due to: ${reason}`);
+  const instance = getInstance(deviceId);
+  
+  if (instance.activeSocket) {
+    try {
+      (instance.activeSocket as any).isClosed = true;
+      instance.activeSocket.end(new Error("Watchdog Force Reconnect: " + reason));
+    } catch (e) {}
+    instance.activeSocket = null;
+  }
+  instance.connectionStatus = "disconnected";
+  
+  setTimeout(() => {
+    connectToWhatsApp(deviceId).catch((err) => {
+      console.error(`[WATCHDOG] Error during force reconnect for ${deviceId}:`, err);
+    });
+  }, 2000);
+}
+
 function startWhatsAppMonitor() {
   setInterval(async () => {
     const now = moment().tz("Asia/Jakarta");
@@ -15452,10 +15472,38 @@ function startWhatsAppMonitor() {
     for (const [deviceId, instance] of instances.entries()) {
       if (instance.connectionStatus === "connected" && instance.activeSocket) {
         const idleTime = Date.now() - instance.lastActivity;
-        // 25 minutes of inactivity (WhatsApp socket sometimes behaves weirdly after long idle)
+        
+        // WATCHDOG: If idle for more than 5 minutes, run a proactive liveness check
+        if (idleTime > 5 * 60 * 1000 && !(instance as any)._checkingLiveness) {
+          (instance as any)._checkingLiveness = true;
+          console.log(`[WATCHDOG] Bot ${deviceId} has been idle for ${Math.floor(idleTime / 1000 / 60)} minutes. Running proactive liveness check...`);
+          
+          try {
+            const sock = instance.activeSocket;
+            // Send a presence update as a quick and lightweight liveness query to WhatsApp
+            await Promise.race([
+              sock.sendPresenceUpdate("available"),
+              new Promise((_, reject) => setTimeout(() => reject(new Error("Liveness ping timeout")), 8000))
+            ]);
+            
+            // Liveness check succeeded! Update lastActivity to extend the idle timer
+            console.log(`[WATCHDOG] Bot ${deviceId} liveness check succeeded. Connection is alive.`);
+            instance.lastActivity = Date.now();
+          } catch (err: any) {
+            console.error(`[WATCHDOG] Bot ${deviceId} liveness check failed:`, err.message);
+            // Reconnect immediately since the socket is dead or hung
+            await forceReconnectBot(deviceId, `Liveness check failed (${err.message})`);
+            continue; // Skip the rest of this tick for this instance
+          } finally {
+            (instance as any)._checkingLiveness = false;
+          }
+        }
+        
+        // WATCHDOG: Fallback to force restart if idle for more than 25 minutes
         if (idleTime > 25 * 60 * 1000) {
-          console.log(`[MONITOR] Bot ${deviceId} idle for ${Math.floor(idleTime / 1000 / 60)} minutes. Restarting to fix hung connection...`);
-          connectToWhatsApp(deviceId).catch(console.error);
+          console.log(`[WATCHDOG] Bot ${deviceId} idle threshold exceeded (${Math.floor(idleTime / 1000 / 60)} minutes). Forcing reconnect...`);
+          await forceReconnectBot(deviceId, `Idle threshold exceeded`);
+          continue; // Skip rest of this tick for this instance
         }
         
         // Group time-based settings
