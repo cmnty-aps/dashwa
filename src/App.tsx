@@ -332,6 +332,16 @@ import {
                 className="w-full bg-white border-4 border-black p-2 font-bold focus:bg-gray-50 outline-none"
               />
             </div>
+            <div className="space-y-1 md:col-span-2">
+              <label className="text-xs font-black uppercase text-gray-600">Nevapedia API Key</label>
+              <input
+                type="text"
+                placeholder="Masukkan Nevapedia API Key Anda..."
+                value={globalConfig.nevapediaApiKey || ''}
+                onChange={e => setGlobalConfig({ ...globalConfig, nevapediaApiKey: e.target.value })}
+                className="w-full bg-white border-4 border-black p-2 font-bold focus:bg-gray-50 outline-none"
+              />
+            </div>
             <div className="space-y-1 md:col-span-2 bg-white/50 p-4 border-2 border-black border-dashed mt-4">
               <label className="text-sm font-black uppercase text-red-600 flex items-center gap-2">
                 <Shield size={16} /> 🛡️ IP Access Whitelist
@@ -1602,8 +1612,20 @@ export default function App() {
                               <p className="text-xs font-bold text-gray-800">Dibutuhkan untuk menjalankan perintah <code className="bg-gray-200 px-1">.deploy</code></p>
                             </div>
                           </div>
-                          
 
+                          <div className="space-y-2">
+                            <label className="text-sm font-black uppercase text-black bg-white border-2 border-black px-2 py-1 inline-block">Nevapedia API Key</label>
+                            <input
+                              type="password"
+                              placeholder="Masukkan Nevapedia API Key..."
+                              value={config?.nevapediaApiKey || ''}
+                              onChange={(e) => setConfig({ ...config, nevapediaApiKey: e.target.value })}
+                              className="w-full bg-white border-4 border-black p-3 font-bold focus:bg-green-100 outline-none font-mono tracking-widest shadow-[4px_4px_0px_0px_#000] active:shadow-none transition-all"
+                            />
+                            <div className="bg-white/70 border-l-4 border-black p-2 inline-block mt-2">
+                              <p className="text-xs font-bold text-gray-800">Dibutuhkan untuk menjalankan perintah pembayaran/payment <code className="bg-gray-200 px-1">.pay</code> atau <code className="bg-gray-200 px-1">.payment</code></p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       

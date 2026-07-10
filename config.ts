@@ -105,6 +105,10 @@ const config = {
   get saweriaUserId() {
     const conf = loadConfig();
     return conf.saweriaUserId || '73182004-b86b-4c16-ace4-bc23c3d8e9aa';
+  },
+  get nevapediaApiKey() {
+    const conf = loadConfig();
+    return conf.nevapediaApiKey || 'apikeymu sendiri';
   }
 };
 

@@ -12777,6 +12777,213 @@ ${v.passive_description || "-"}`;
         return;
       }
 
+      if (["pay", "payment"].includes(command || "")) {
+        if (!isOwner) return reply('🚫 *ᴀᴋsᴇs ᴅɪᴛᴏʟᴀᴋ*\n\n> Hanya owner yang bisa menggunakan fitur ini!');
+
+        const action = args[0]?.toLowerCase();
+        const API_KEY = deviceConfig.nevapediaApiKey || config.nevapediaApiKey || 'apikeymu sendiri';
+        const BASE_URL = 'https://app.nevapedia.com/api';
+
+        const showMenu = () => {
+            const txt = `┌˚₊ ๑│ ɴ ᴇ ᴠ ᴀ ᴘ ᴇ ᴅ ɪ ᴀ │๑˚₊ 💳\n` +
+                      `┇ \n` +
+                      `│ ✨ *Daftar Perintah (Nevapedia API):*\n` +
+                      `│ \n` +
+                      `│ ◦ *${prefix + command} balance* (Cek Saldo)\n` +
+                      `│ ◦ *${prefix + command} invoice <nominal>* (Buat Invoice)\n` +
+                      `│ ◦ *${prefix + command} cekinvoice <id_invoice>* (Cek Invoice)\n` +
+                      `│ ◦ *${prefix + command} wdmethod* (List Metode WD)\n` +
+                      `│ ◦ *${prefix + command} wd <nominal> <metode> <no_rek/akun> [instant(true/false)]* (Tarik Dana)\n` +
+                      `│ ◦ *${prefix + command} cekwd <id_wd>* (Cek Status WD)\n` +
+                      `┇ \n` +
+                      `└˚₊ ๑ ────────────── ๑˚₊\n` +
+                      `> © ERINE-AI`;
+            return reply(txt);
+        };
+
+        if (!action) return showMenu();
+
+        await react('⏳');
+
+        try {
+            switch (action) {
+                case 'balance':
+                case 'saldo': {
+                    const res = await axios.get(`${BASE_URL}/balance?apikey=${API_KEY}`);
+                    const data = res.data;
+                    const txt = `┌˚₊ ๑│ ɴ ᴇ ᴠ ᴀ ᴘ ᴇ ᴅ ɪ ᴀ │๑˚₊ 💳\n` +
+                              `┇ \n` +
+                              `│ 👤 *Username:* ${data.username || '-'}\n` +
+                              `│ 📧 *Email:* ${data.email || '-'}\n` +
+                              `│ 💰 *Saldo:* Rp ${data.balance ? data.balance.toLocaleString('id-ID') : '0'}\n` +
+                              `┇ \n` +
+                              `└˚₊ ๑ ────────────── ๑˚₊\n` +
+                              `> © ERINE-AI`;
+                    await reply(txt);
+                    break;
+                }
+
+                case 'invoice':
+                case 'create': {
+                    const amount = args[1];
+                    if (!amount || isNaN(amount as any)) return reply(`❌ Masukkan nominal yang valid!\nContoh: *${prefix + command} invoice 50000*`);
+                    
+                    const res = await axios.get(`${BASE_URL}/invoice?apikey=${API_KEY}&amount=${amount}`);
+                    const data = res.data;
+
+                    if (!data.success && !data.invoice_id) throw new Error(data.message || 'Gagal membuat invoice');
+
+                    const txt = `┌˚₊ ๑│ ɪ ɴ ᴠ ᴏ ɪ ᴄ ᴇ │๑˚₊ 🧾\n` +
+                              `┇ \n` +
+                              `│ 🆔 *ID Invoice:* ${data.invoice_id}\n` +
+                              `│ 💰 *Nominal:* Rp ${data.amount.toLocaleString('id-ID')}\n` +
+                              `│ 📉 *Fee:* Rp ${data.fee.toLocaleString('id-ID')}\n` +
+                              `│ 💵 *Total Bayar:* Rp ${data.total.toLocaleString('id-ID')}\n` +
+                              `│ ⏳ *Expired:* ${data.expired_at}\n` +
+                              `│ 🔗 *Link Bayar:* ${data.payment_link || '-'}\n` +
+                              `┇ \n` +
+                              `└˚₊ ๑ ────────────── ๑˚₊\n` +
+                              `> © ERINE-AI`;
+
+                    if (data.qris_image) {
+                        await sock.sendMessage(chatId, { image: { url: data.qris_image }, caption: txt }, { quoted: m });
+                    } else {
+                        await reply(txt);
+                    }
+                    break;
+                }
+
+                case 'cekinvoice':
+                case 'statusinv': {
+                    const invId = args[1];
+                    if (!invId) return reply(`❌ Masukkan ID Invoice!\nContoh: *${prefix + command} cekinvoice 64c8d9e...*`);
+                    
+                    const res = await axios.get(`${BASE_URL}/invoice/status?apikey=${API_KEY}&invoice_id=${invId}`);
+                    const data = res.data;
+
+                    const txt = `┌˚₊ ๑│ ᴄ ᴇ ᴋ  ɪ ɴ ᴠ ᴏ ɪ ᴄ ᴇ │๑˚₊ 🔍\n` +
+                              `┇ \n` +
+                              `│ 🆔 *ID Invoice:* ${data.invoice_id}\n` +
+                              `│ 📊 *Status:* ${data.status.toUpperCase()}\n` +
+                              `│ 💰 *Nominal:* Rp ${data.amount.toLocaleString('id-ID')}\n` +
+                              `│ 💵 *Total Bayar:* Rp ${data.total.toLocaleString('id-ID')}\n` +
+                              `│ 📅 *Dibuat:* ${data.created_at}\n` +
+                              `│ ⏳ *Expired:* ${data.expired_at}\n` +
+                              `┇ \n` +
+                              `└˚₊ ๑ ────────────── ๑˚₊\n` +
+                              `> © ERINE-AI`;
+                    await reply(txt);
+                    break;
+                }
+
+                case 'wdmethod':
+                case 'method': {
+                    const res = await axios.get(`${BASE_URL}/withdraw/methods?apikey=${API_KEY}`);
+                    const data = res.data;
+
+                    let txt = `┌˚₊ ๑│ ᴍ ᴇ ᴛ ᴏ ᴅ ᴇ  ᴡ ᴅ │๑˚₊ 🏦\n┇ \n`;
+                    
+                    txt += `│ 📌 *Manual Methods:*\n`;
+                    if (data.manual_methods && data.manual_methods.length > 0) {
+                        data.manual_methods.forEach((m: any) => {
+                            txt += `│ ◦ ${m.name} (${m.code}) - Fee: Rp${m.fee}\n`;
+                        });
+                    } else {
+                        txt += `│ ◦ (Tidak tersedia)\n`;
+                    }
+
+                    txt += `│ \n│ ⚡ *Instant Methods:*\n`;
+                    if (data.instant_methods && data.instant_methods.length > 0) {
+                        data.instant_methods.forEach((m: any) => {
+                            txt += `│ ◦ ${m.name} (${m.code}) - Fee: Rp${m.fee}\n`;
+                        });
+                    } else {
+                        txt += `│ ◦ (Tidak tersedia)\n`;
+                    }
+
+                    txt += `┇ \n└˚₊ ๑ ────────────── ๑˚₊\n> © ERINE-AI`;
+                    await reply(txt);
+                    break;
+                }
+
+                case 'wd':
+                case 'withdraw': {
+                    const amount = args[1];
+                    const method = args[2];
+                    const accNum = args[3];
+                    const instant = args[4] ? args[4].toLowerCase() : 'false';
+
+                    if (!amount || !method || !accNum) {
+                        return reply(`❌ Format salah!\nContoh: *${prefix + command} wd 50000 dana 08123456789 false*`);
+                    }
+
+                    const isInstant = (instant === 'true' || instant === 'instan') ? 'true' : 'false';
+                    const res = await axios.get(`${BASE_URL}/withdraw?apikey=${API_KEY}&amount=${amount}&method=${method}&account_number=${accNum}&instant=${isInstant}`);
+                    const data = res.data;
+
+                    if (!data.success) throw new Error(data.message || 'Penarikan gagal.');
+
+                    const wd = data.data;
+                    const txt = `┌˚₊ ๑│ ᴡ ɪ ᴛ ʜ ᴅ ʀ ᴀ ᴡ │๑˚₊ 💸\n` +
+                              `┇ \n` +
+                              `│ 🆔 *ID WD:* ${wd.id}\n` +
+                              `│ 🏦 *Metode:* ${wd.method}\n` +
+                              `│ 🔢 *No Akun:* ${wd.account_number}\n` +
+                              `│ 💰 *Nominal:* Rp ${wd.amount.toLocaleString('id-ID')}\n` +
+                              `│ 📉 *Fee:* Rp ${wd.fee.toLocaleString('id-ID')}\n` +
+                              `│ 📊 *Status:* ${wd.status.toUpperCase()}\n` +
+                              `│ 📅 *Waktu:* ${wd.created_at}\n` +
+                              `┇ \n` +
+                              `└˚₊ ๑ ────────────── ๑˚₊\n` +
+                              `> © ERINE-AI`;
+                    await reply(txt);
+                    break;
+                }
+
+                case 'cekwd':
+                case 'statuswd': {
+                    const wdId = args[1];
+                    if (!wdId) return reply(`❌ Masukkan ID Withdraw!\nContoh: *${prefix + command} cekwd WDc4e3f2...*`);
+                    
+                    const res = await axios.get(`${BASE_URL}/withdraw/status?apikey=${API_KEY}&id=${wdId}`);
+                    const data = res.data;
+
+                    const txt = `┌˚₊ ๑│ ᴄ ᴇ ᴋ  ᴡ ᴅ │๑˚₊ 🔍\n` +
+                              `┇ \n` +
+                              `│ 🆔 *ID WD:* ${data.id}\n` +
+                              `│ 🏦 *Metode:* ${data.method} (${data.account_number})\n` +
+                              `│ 💰 *Nominal:* Rp ${data.amount.toLocaleString('id-ID')}\n` +
+                              `│ 📊 *Status:* ${data.status.toUpperCase()}\n` +
+                              `│ ⚡ *Tipe Instan:* ${data.instant ? 'Ya' : 'Tidak'}\n` +
+                              `│ 📅 *Dibuat:* ${data.created_at || '-'}\n` +
+                              `│ ✅ *Selesai:* ${data.completed_at || '-'}\n` +
+                              `┇ \n` +
+                              `└˚₊ ๑ ────────────── ๑˚₊\n` +
+                              `> © ERINE-AI`;
+                    await reply(txt);
+                    break;
+                }
+
+                default:
+                    showMenu();
+            }
+
+            await react('✅');
+
+        } catch (e: any) {
+            console.error(e);
+            await react('❌');
+            
+            let errorMsg = e.message;
+            if (e.response && e.response.data) {
+                errorMsg = e.response.data.message || e.response.data.error || JSON.stringify(e.response.data);
+            }
+            
+            await reply(`┌˚₊ ๑│ s ʏ s ᴛ ᴇ ᴍ   ᴇ ʀ ʀ ᴏ ʀ │๑˚₊ ❌\n┇ Gagal mengeksekusi perintah.\n│ *Detail:* ${errorMsg}\n└˚₊ ๑ ────────────── ๑˚₊\n> © ERINE-AI`);
+        }
+        return;
+      }
+
       if (["antilinkgc", "antilinkwa", "algc", "antilinkgrup"].includes(command || "")) {
         if (!isGroup) return reply("❌ Fitur ini hanya dapat digunakan di dalam grup!");
         if (!isAdmin && !isOwner) return reply("❌ Fitur ini khusus Admin grup!");
@@ -14006,6 +14213,7 @@ _Mau langgar? Siap-siap di Kick!_`;
         menu += `┃ \`${prefix}upch\`\n`;
         menu += `┃ \`${prefix}join\`\n`;
         menu += `┃ \`${prefix}leave\`\n`;
+        menu += `┃ \`${prefix}pay\` / \`${prefix}payment\`\n`;
         menu += `╰━━━━━━━━━━━━┈.✦ ݁˖\n`;
         menu += `╭━〔 *GROUP* 〕━┈\n`;
         menu += `┃ \`${prefix}ht\` / \`${prefix}h\`\n`;
@@ -14879,6 +15087,7 @@ async function startServer() {
           thumbnailUrl: globalConf.thumbnailUrl || "https://c.termai.cc/i151/4aSA.png",
           takoUsername: globalConf.takoUsername || "ojicmnty",
           saweriaUserId: globalConf.saweriaUserId || "73182004-b86b-4c16-ace4-bc23c3d8e9aa",
+          nevapediaApiKey: deviceConfig.nevapediaApiKey !== undefined ? deviceConfig.nevapediaApiKey : (globalConf.nevapediaApiKey || ""),
           googleAnalyticsId: globalConf.googleAnalyticsId || ""
         });
       } catch (e) {
