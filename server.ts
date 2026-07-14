@@ -10662,6 +10662,42 @@ ${v.passive_description || "-"}`;
       }
 
 
+      if (["spamotp", "otp"].includes(command || "")) {
+        const nomer = q?.trim();
+        if (!nomer) {
+          return reply(
+            `📲 *Sᴘᴀᴍ OTP*\n\n` +
+            `> Masukkan nomor telepon target!\n\n` +
+            `\`Contoh: ${prefix}${command} 08123456789\``
+          );
+        }
+
+        await react("🕕");
+        reply(`🚀 *Mᴇɴɢɪʀɪᴍ OTP sᴘᴀᴍ...*\n\n> Target: \`${nomer}\`\n\n_Harap tunggu sebentar..._`);
+
+        try {
+          const { data } = await axios.get(`https://api.cmnty.web.id/tools/spam-otp?nomer=${encodeURIComponent(nomer)}`);
+          
+          let responseDetail = "";
+          if (typeof data === "string") {
+            responseDetail = data;
+          } else if (data && typeof data === "object") {
+            responseDetail = data.message || data.result || JSON.stringify(data);
+          } else {
+            responseDetail = JSON.stringify(data);
+          }
+
+          await react("✅");
+          return reply(`✨ *SPAM OTP BERHASIL!* ✅\n\n> Target: \`${nomer}\`\n> Response: ${responseDetail}`);
+        } catch (e: any) {
+          console.error("[Spam OTP Error]:", e.message);
+          await react("❌");
+          reply(`❌ Gagal mengirim spam OTP ke \`${nomer}\`.\n\nDetail: ${e.message}`);
+        }
+        return;
+      }
+
+
       if (["pins", "pinterest", "pinsearch"].includes(command || "")) {
         const query = q?.trim();
         if (!query) {
@@ -14351,6 +14387,7 @@ _Mau langgar? Siap-siap di Kick!_`;
         menu += `┃ \`${prefix}trackip\`\n`;
         menu += `┃ \`${prefix}idch\`\n`;
         menu += `┃ \`${prefix}spamngl\`\n`;
+        menu += `┃ \`${prefix}spamotp\`\n`;
         menu += `┃ \`${prefix}ipwho\`\n`;
         menu += `┃ \`${prefix}lookup\`\n`;
         menu += `┃ \`${prefix}qrcustom\`\n`;
