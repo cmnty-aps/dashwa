@@ -837,6 +837,105 @@ async function kodeposHandler(m: any, sock: any, q: string, deviceId: string) {
     }
 }
 
+async function cekbpomHandler(m: any, sock: any, q: string, deviceId: string) {
+    const instance = getInstance(deviceId);
+    const deviceConfig = instance.config;
+    const jid = m.key.remoteJid;
+    const prefix = ".";
+
+    const code = q?.trim();
+    if (!code) {
+        return sock.sendMessage(jid, {
+            text: `🔎 *ᴄᴇᴋ ʙᴘᴏᴍ*\n\n` +
+                  `> Cari dan cek nomor registrasi BPOM produk kosmetik, obat, makanan, dll.\n\n` +
+                  `> *Cara pakai:* \`${prefix}cekbpom <nomor_registrasi_bpom>\`\n` +
+                  `> *Contoh:* \`${prefix}cekbpom NA18240118644\``,
+            contextInfo: getContextInfo(deviceConfig, m)
+        }, { quoted: getVerifiedQuoted(deviceConfig) as any });
+    }
+
+    await sock.sendMessage(jid, { react: { text: "⏳", key: m.key } });
+
+    try {
+        const { data } = await axios.get(`https://api.cmnty.web.id/tools/bpom?code=${encodeURIComponent(code)}`);
+
+        if (!data?.status || !data?.result) {
+            await sock.sendMessage(jid, { react: { text: "❌", key: m.key } });
+            return sock.sendMessage(jid, { 
+                text: `❌ Nomor registrasi BPOM *${code}* tidak ditemukan atau terjadi kesalahan pada API.`, 
+                contextInfo: getContextInfo(deviceConfig, m) 
+            }, { quoted: getVerifiedQuoted(deviceConfig) as any });
+        }
+
+        const res = data.result;
+        let resultText = `📋 *ᴅᴇᴛᴀɪʟ ɪɴғᴏʀᴍᴀsɪ ʙᴘᴏᴍ*\n\n`;
+        
+        resultText += `> *Informasi Produk*\n`;
+        resultText += `╭┈┈⬡\n`;
+        resultText += `┃ 🏷️ *Produk:* ${res.name || "-"}\n`;
+        resultText += `┃ 🛍️ *Merk:* ${res.brands || "-"}\n`;
+        resultText += `┃ 🔢 *No. Registrasi:* ${res.register || "-"}\n`;
+        resultText += `┃ 🗂️ *Klasifikasi:* ${res.class || "-"}\n`;
+        resultText += `┃ 📦 *Kemasan:* ${res.package || "-"}\n`;
+        resultText += `┃ 🧪 *Bentuk Sediaan:* ${res.form || "-"}\n`;
+        resultText += `┃ 📌 *Status:* ${res.status || "-"}\n`;
+        resultText += `┃ ⏳ *Berlaku S/D:* ${res.expiredDate || "-"}\n`;
+        resultText += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
+
+        resultText += `> *Informasi Pendaftar*\n`;
+        resultText += `╭┈┈⬡\n`;
+        resultText += `┃ 🏢 *Pendaftar:* ${res.registrar || "-"}\n`;
+        
+        const addrParts = [];
+        if (res.address) addrParts.push(res.address);
+        if (res.districtDetail) addrParts.push(res.districtDetail);
+        if (res.provinceDetail) addrParts.push(res.provinceDetail);
+        if (res.countryDetail) addrParts.push(res.countryDetail);
+        const fullAddress = addrParts.join(", ") || "-";
+        
+        resultText += `┃ 📍 *Alamat:* ${fullAddress}\n`;
+        resultText += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
+
+        if (Array.isArray(res.manufacturer) && res.manufacturer.length > 0) {
+            resultText += `> *Produsen/Pabrik*\n`;
+            for (const factory of res.manufacturer) {
+                resultText += `╭┈┈⬡\n`;
+                resultText += `┃ 🏭 *Nama:* ${factory.name || "-"}\n`;
+                if (factory.address) {
+                    resultText += `┃ 📍 *Alamat:* ${factory.address}\n`;
+                }
+                if (factory.region) {
+                    resultText += `┃ 🗺️ *Negara:* ${factory.region}\n`;
+                }
+                if (factory.caption) {
+                    resultText += `┃ 🏷️ *Keterangan:* ${factory.caption}\n`;
+                }
+                resultText += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
+            }
+        }
+
+        await sock.sendMessage(jid, {
+            text: resultText.trim(),
+            contextInfo: getContextInfo(deviceConfig, m),
+            forwardedNewsletterMessageInfo: {
+                newsletterJid: deviceConfig.channel?.id || '120363426467190619@newsletter',
+                newsletterName: deviceConfig.channel?.name || 'CMNTY-BOT',
+                serverMessageId: 1
+            }
+        }, { quoted: getVerifiedQuoted(deviceConfig) as any });
+
+        await sock.sendMessage(jid, { react: { text: "✅", key: m.key } });
+
+    } catch (err: any) {
+        console.error("[CekBPOM Error]:", err.message);
+        await sock.sendMessage(jid, { react: { text: "❌", key: m.key } });
+        sock.sendMessage(jid, { 
+            text: `❌ Terjadi kesalahan atau nomor registrasi BPOM tidak terdaftar.\n\nDetail: ${err.message}`, 
+            contextInfo: getContextInfo(deviceConfig, m) 
+        }, { quoted: getVerifiedQuoted(deviceConfig) as any });
+    }
+}
+
 async function bisakahHandler(m: any, sock: any, q: string, deviceId: string) {
     const instance = getInstance(deviceId);
     const deviceConfig = instance.config;
@@ -9881,6 +9980,41 @@ ${v.passive_description || "-"}`;
         return;
       }
 
+      if (["dongart"].includes(command || "")) {
+        await react("🔞");
+        try {
+          const response = await axios.get("https://api.cmnty.web.id/random/dongart", {
+            responseType: "arraybuffer",
+            timeout: 30000,
+          });
+
+          const buffer = Buffer.from(response.data);
+          const quoted = getVerifiedQuoted(deviceConfig);
+
+          await sock.sendMessage(m.key.remoteJid!, {
+            image: buffer,
+            caption: "🔞 *Dᴏɴɢᴀʀᴛ*",
+            contextInfo: {
+                ...getContextInfo(deviceConfig, m),
+                forwardingScore: 99,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                  newsletterJid: "120363426467190619@newsletter",
+                  newsletterName: deviceConfig.bot?.name || "CMNTY-BOT",
+                  serverMessageId: 1
+                }
+            }
+          }, { quoted: quoted as any });
+
+          await react("✅");
+        } catch (err: any) {
+          console.error("[DONGART]", err);
+          await react("❌");
+          reply(`❌ Gagal mengambil gambar: ${err.message || err}`);
+        }
+        return;
+      }
+
       if (["snackvideodl", "svdl", "snackvideo", "sv"].includes(command || "")) {
         const text = q;
         if (!text) {
@@ -10020,6 +10154,11 @@ ${v.passive_description || "-"}`;
 
       if (["kodepos", "carikodepos"].includes(command || "")) {
         await kodeposHandler(m, sock, q, deviceId);
+        return;
+      }
+
+      if (["cekbpom", "bpom"].includes(command || "")) {
+        await cekbpomHandler(m, sock, q, deviceId);
         return;
       }
 
@@ -10693,6 +10832,65 @@ ${v.passive_description || "-"}`;
           console.error("[Spam OTP Error]:", e.message);
           await react("❌");
           reply(`❌ Gagal mengirim spam OTP ke \`${nomer}\`.\n\nDetail: ${e.message}`);
+        }
+        return;
+      }
+
+
+      if (["webtoapk", "web2apk"].includes(command || "")) {
+        const parts = q?.split("|");
+        const url = parts?.[0]?.trim();
+        const name = parts?.[1]?.trim();
+        const pkg = parts?.[2]?.trim();
+        const icon = parts?.[3]?.trim();
+
+        if (!url || !name || !pkg || !icon) {
+          return reply(
+            `📲 *ᴡᴇʙ TO APK*\n\n` +
+            `> Ubah website menjadi file aplikasi Android (APK)!\n\n` +
+            `> *Format:* ${prefix}${command} url | nama_app | nama_package | link_icon\n\n` +
+            `> *Contoh:*\n` +
+            `\`${prefix}${command} https://google.com | Google App | com.google.app | https://google.com/favicon.ico\``
+          );
+        }
+
+        await react("🕕");
+        reply(`🚀 *Sedang memproses konversi Web ke APK...*\n\n> URL: ${url}\n> Nama: ${name}\n> Package: ${pkg}\n> Icon: ${icon}\n\n_Proses ini memakan waktu, harap tunggu sebentar..._`);
+
+        try {
+          const apiUrl = `https://api.cmnty.web.id/tools/web2apk?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}&package=${encodeURIComponent(pkg)}&icon=${encodeURIComponent(icon)}`;
+          const response = await axios.get(apiUrl, { responseType: "arraybuffer", timeout: 120000 });
+          const contentType = response.headers["content-type"] || "";
+          const buffer = Buffer.from(response.data);
+
+          if (String(contentType).includes("application/json")) {
+            const text = buffer.toString("utf-8");
+            const json = JSON.parse(text);
+            if (json.status && json.result?.downloadUrl) {
+              await react("✅");
+              await sock.sendMessage(m.key.remoteJid!, {
+                document: { url: json.result.downloadUrl },
+                mimetype: "application/vnd.android.package-archive",
+                fileName: `${name.replace(/[^a-zA-Z0-9]/g, "_")}.apk`,
+                contextInfo: getContextInfo(deviceConfig, m)
+              }, { quoted: getVerifiedQuoted(deviceConfig) as any });
+            } else {
+              await react("❌");
+              return reply(`❌ Gagal konversi: ${json.message || json.result || text}`);
+            }
+          } else {
+            await react("✅");
+            await sock.sendMessage(m.key.remoteJid!, {
+              document: buffer,
+              mimetype: "application/vnd.android.package-archive",
+              fileName: `${name.replace(/[^a-zA-Z0-9]/g, "_")}.apk`,
+              contextInfo: getContextInfo(deviceConfig, m)
+            }, { quoted: getVerifiedQuoted(deviceConfig) as any });
+          }
+        } catch (e: any) {
+          console.error("[WebToApk Error]:", e.message);
+          await react("❌");
+          reply(`❌ Gagal mengubah Web ke APK.\n\nDetail: ${e.message}`);
         }
         return;
       }
@@ -14176,6 +14374,46 @@ _Mau langgar? Siap-siap di Kick!_`;
       return;
     }
 
+    if (["recordweb", "recweb", "webrecord"].includes(command || "")) {
+      let text = q?.trim();
+
+      if (!text) {
+        return reply(
+          `📹 *ʀᴇᴄᴏʀᴅ ᴡᴇʙ*\n\n` +
+          `> Rekam halaman website dalam bentuk video\n\n` +
+          `> *Contoh:*\n` +
+          `> ${prefix}recordweb google.com\n` +
+          `> ${prefix}${command} https://github.com`
+        );
+      }
+
+      if (!text.startsWith('http')) {
+        text = 'https://' + text;
+      }
+
+      await react('🕕');
+      await reply(`📹 *Sedang merekam website...*\n\n> URL: ${text}\n> Estimasi durasi: ~10-15 detik.\n_Harap tunggu sebentar..._`);
+
+      try {
+        const apiUrl = `https://api.cmnty.web.id/tools/record?url=${encodeURIComponent(text)}&device=iphone_15_pro&duration_ms=8000&scroll=true&dark_mode=true&wait_ms=1000`;
+        const res = await axios.get(apiUrl, { responseType: 'arraybuffer', timeout: 60000 });
+        const videoBuffer = Buffer.from(res.data);
+
+        await react('✅');
+        const vQuoted = getVerifiedQuoted(deviceConfig);
+        await sock.sendMessage(chatId, {
+          video: videoBuffer,
+          caption: `📹 *Record Web Berhasil* ✅\n\n> URL: ${text}\n> Device: iPhone 15 Pro\n> Durasi: 8s\n> Scroll: Aktif`,
+          contextInfo: getContextInfo(deviceConfig, m)
+        }, { quoted: vQuoted as any });
+
+      } catch (error: any) {
+        await react('❌');
+        reply(`❌ Gagal merekam website: ${error.message}`);
+      }
+      return;
+    }
+
     if (["ptv", "pvideo", "circlevideo"].includes(command || "")) {
       const typeMedia = Object.keys(m.message || {})[0];
       const isQuotedVideo = typeMedia === "extendedTextMessage" && m.message.extendedTextMessage?.contextInfo?.quotedMessage?.videoMessage;
@@ -14383,6 +14621,7 @@ _Mau langgar? Siap-siap di Kick!_`;
         menu += `┃ \`${prefix}toimg\`\n`;
         menu += `┃ \`${prefix}tourl\`\n`;
         menu += `┃ \`${prefix}kodepos\`\n`;
+        menu += `┃ \`${prefix}cekbpom\`\n`;
         menu += `┃ \`${prefix}kalkulatormlbb\`\n`;
         menu += `┃ \`${prefix}trackip\`\n`;
         menu += `┃ \`${prefix}idch\`\n`;
@@ -14395,7 +14634,9 @@ _Mau langgar? Siap-siap di Kick!_`;
         menu += `┃ \`${prefix}pastebin\`\n`;
         menu += `┃ \`${prefix}ptv\`\n`;
         menu += `┃ \`${prefix}ssweb\`\n`;
+        menu += `┃ \`${prefix}recordweb\`\n`;
         menu += `┃ \`${prefix}web2zip\`\n`;
+        menu += `┃ \`${prefix}webtoapk\`\n`;
         menu += `╰━━━━━━━━━━━━┈.✦ ݁˖\n`;
         menu += `╭━〔 *STALKER* 〕━┈\n`;
         menu += `┃ \`${prefix}igstalk\`\n`;
@@ -14419,8 +14660,9 @@ _Mau langgar? Siap-siap di Kick!_`;
         menu += `╰━━━━━━━━━━━━┈.✦ ݁˖\n`;
         menu += `╭━〔 *NSFW* 〕━┈\n`;
         menu += `┃ \`${prefix}hentai\`\n`;
-        menu += `┃ \ \`${prefix}kasedaiki\`\n`;
-        menu += `┃ \ \`${prefix}gangbang\`\n`;
+        menu += `┃ \`${prefix}kasedaiki\`\n`;
+        menu += `┃ \`${prefix}gangbang\`\n`;
+        menu += `┃ \`${prefix}dongart\`\n`;
         menu += `╰━━━━━━━━━━━━┈.✦ ݁˖\n`;
         menu += `╭━〔 *FUN* 〕━┈\n`;
         menu += `┃ \`${prefix}akankah\`\n`;
