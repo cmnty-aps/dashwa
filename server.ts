@@ -17,7 +17,7 @@ import makeWASocket, {
   getContentType,
   generateWAMessageContent,
   generateWAMessageFromContent,
-} from "@whiskeysockets/baileys";
+} from "@elrayyxml/baileys";
 import NodeCache from "node-cache";
 import pino from "pino";
 import fs from "fs";
