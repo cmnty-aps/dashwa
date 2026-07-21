@@ -837,105 +837,6 @@ async function kodeposHandler(m: any, sock: any, q: string, deviceId: string) {
     }
 }
 
-async function cekbpomHandler(m: any, sock: any, q: string, deviceId: string) {
-    const instance = getInstance(deviceId);
-    const deviceConfig = instance.config;
-    const jid = m.key.remoteJid;
-    const prefix = ".";
-
-    const code = q?.trim();
-    if (!code) {
-        return sock.sendMessage(jid, {
-            text: `🔎 *ᴄᴇᴋ ʙᴘᴏᴍ*\n\n` +
-                  `> Cari dan cek nomor registrasi BPOM produk kosmetik, obat, makanan, dll.\n\n` +
-                  `> *Cara pakai:* \`${prefix}cekbpom <nomor_registrasi_bpom>\`\n` +
-                  `> *Contoh:* \`${prefix}cekbpom NA18240118644\``,
-            contextInfo: getContextInfo(deviceConfig, m)
-        }, { quoted: getVerifiedQuoted(deviceConfig) as any });
-    }
-
-    await sock.sendMessage(jid, { react: { text: "⏳", key: m.key } });
-
-    try {
-        const { data } = await axios.get(`https://api.cmnty.web.id/tools/bpom?code=${encodeURIComponent(code)}`);
-
-        if (!data?.status || !data?.result) {
-            await sock.sendMessage(jid, { react: { text: "❌", key: m.key } });
-            return sock.sendMessage(jid, { 
-                text: `❌ Nomor registrasi BPOM *${code}* tidak ditemukan atau terjadi kesalahan pada API.`, 
-                contextInfo: getContextInfo(deviceConfig, m) 
-            }, { quoted: getVerifiedQuoted(deviceConfig) as any });
-        }
-
-        const res = data.result;
-        let resultText = `📋 *ᴅᴇᴛᴀɪʟ ɪɴғᴏʀᴍᴀsɪ ʙᴘᴏᴍ*\n\n`;
-        
-        resultText += `> *Informasi Produk*\n`;
-        resultText += `╭┈┈⬡\n`;
-        resultText += `┃ 🏷️ *Produk:* ${res.name || "-"}\n`;
-        resultText += `┃ 🛍️ *Merk:* ${res.brands || "-"}\n`;
-        resultText += `┃ 🔢 *No. Registrasi:* ${res.register || "-"}\n`;
-        resultText += `┃ 🗂️ *Klasifikasi:* ${res.class || "-"}\n`;
-        resultText += `┃ 📦 *Kemasan:* ${res.package || "-"}\n`;
-        resultText += `┃ 🧪 *Bentuk Sediaan:* ${res.form || "-"}\n`;
-        resultText += `┃ 📌 *Status:* ${res.status || "-"}\n`;
-        resultText += `┃ ⏳ *Berlaku S/D:* ${res.expiredDate || "-"}\n`;
-        resultText += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
-
-        resultText += `> *Informasi Pendaftar*\n`;
-        resultText += `╭┈┈⬡\n`;
-        resultText += `┃ 🏢 *Pendaftar:* ${res.registrar || "-"}\n`;
-        
-        const addrParts = [];
-        if (res.address) addrParts.push(res.address);
-        if (res.districtDetail) addrParts.push(res.districtDetail);
-        if (res.provinceDetail) addrParts.push(res.provinceDetail);
-        if (res.countryDetail) addrParts.push(res.countryDetail);
-        const fullAddress = addrParts.join(", ") || "-";
-        
-        resultText += `┃ 📍 *Alamat:* ${fullAddress}\n`;
-        resultText += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
-
-        if (Array.isArray(res.manufacturer) && res.manufacturer.length > 0) {
-            resultText += `> *Produsen/Pabrik*\n`;
-            for (const factory of res.manufacturer) {
-                resultText += `╭┈┈⬡\n`;
-                resultText += `┃ 🏭 *Nama:* ${factory.name || "-"}\n`;
-                if (factory.address) {
-                    resultText += `┃ 📍 *Alamat:* ${factory.address}\n`;
-                }
-                if (factory.region) {
-                    resultText += `┃ 🗺️ *Negara:* ${factory.region}\n`;
-                }
-                if (factory.caption) {
-                    resultText += `┃ 🏷️ *Keterangan:* ${factory.caption}\n`;
-                }
-                resultText += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
-            }
-        }
-
-        await sock.sendMessage(jid, {
-            text: resultText.trim(),
-            contextInfo: getContextInfo(deviceConfig, m),
-            forwardedNewsletterMessageInfo: {
-                newsletterJid: deviceConfig.channel?.id || '120363426467190619@newsletter',
-                newsletterName: deviceConfig.channel?.name || 'CMNTY-BOT',
-                serverMessageId: 1
-            }
-        }, { quoted: getVerifiedQuoted(deviceConfig) as any });
-
-        await sock.sendMessage(jid, { react: { text: "✅", key: m.key } });
-
-    } catch (err: any) {
-        console.error("[CekBPOM Error]:", err.message);
-        await sock.sendMessage(jid, { react: { text: "❌", key: m.key } });
-        sock.sendMessage(jid, { 
-            text: `❌ Terjadi kesalahan atau nomor registrasi BPOM tidak terdaftar.\n\nDetail: ${err.message}`, 
-            contextInfo: getContextInfo(deviceConfig, m) 
-        }, { quoted: getVerifiedQuoted(deviceConfig) as any });
-    }
-}
-
 async function bisakahHandler(m: any, sock: any, q: string, deviceId: string) {
     const instance = getInstance(deviceId);
     const deviceConfig = instance.config;
@@ -10157,11 +10058,6 @@ ${v.passive_description || "-"}`;
         return;
       }
 
-      if (["cekbpom", "bpom"].includes(command || "")) {
-        await cekbpomHandler(m, sock, q, deviceId);
-        return;
-      }
-
       if (["akankah", "akan", "will"].includes(command || "")) {
         await akankahHandler(m, sock, q, deviceId);
         return;
@@ -14621,7 +14517,6 @@ _Mau langgar? Siap-siap di Kick!_`;
         menu += `┃ \`${prefix}toimg\`\n`;
         menu += `┃ \`${prefix}tourl\`\n`;
         menu += `┃ \`${prefix}kodepos\`\n`;
-        menu += `┃ \`${prefix}cekbpom\`\n`;
         menu += `┃ \`${prefix}kalkulatormlbb\`\n`;
         menu += `┃ \`${prefix}trackip\`\n`;
         menu += `┃ \`${prefix}idch\`\n`;
