@@ -21,7 +21,7 @@
     "@types/fs-extra": "^11.0.4",
     "@types/react-google-recaptcha": "^2.1.9",
     "@vitejs/plugin-react": "^5.0.4",
-    "@elrayyxml/baileys": "latest",
+    "@levvleys": "latest",
     "adm-zip": "^0.5.17",
     "awesome-phonenumber": "^7.8.0",
     "axios": "^1.15.2",
